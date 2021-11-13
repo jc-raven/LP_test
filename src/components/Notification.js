@@ -7,10 +7,15 @@ Notification.propTypes = {
   handleClose: PropTypes.func.isRequired,
   handleAction: PropTypes.func.isRequired,
   open: PropTypes.bool.isRequired,
+  submission: PropTypes.object.isRequired,
 }
 
 /**
  * a notification component implemented with the Material snackbar
+ * @param handleClose: handler to dismiss the notification
+ * @param handleAction: handler for when the like button is clicked
+ * @param open: should the notification be displayed?
+ * @param submission: the new submission to display in the notification
  */
 export default function Notification(props) {
   const { open, handleClose, handleAction, submission } = props;
@@ -19,7 +24,6 @@ export default function Notification(props) {
 	return (
     <Snackbar
       open={open}
-      autoHideDuration={6000}
       onClose={null}
       anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
       sx={{backgroundColor: '#1976d2', color: '#fff'}}
