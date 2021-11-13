@@ -6,7 +6,8 @@ import { fetchLikedFormSubmissions, saveFormSubmission } from '../service/mockSe
   * loading of the saved submissions
   * saving new submissions 
   * @returns an array of:
-    * @var isFetched: the current fetch status 
+    * @var isLoading: status to indicate liked subs are being fetched
+    * @var isSaving: a submission has been liked
     * @var likedSubs: an array of saved submissions 
     * @var handleLikeSub: handler for saving new submissions
  */
@@ -14,7 +15,8 @@ import { fetchLikedFormSubmissions, saveFormSubmission } from '../service/mockSe
 const RETRY = 300;
 
 export default function useLikedSubmissions () {
-  const [isFetched, setisFetched] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving]   = useState(false);
   const [likedSubs, setLikedSubs] = useState([]);
 
   // poll the server until saved submissions are sucessfully retrieved
@@ -28,16 +30,16 @@ export default function useLikedSubmissions () {
         setTimeout(retrieveSubmissions, RETRY);
       }); 
       if (response && response.status === 200) {
-        setisFetched(true);
+        setIsLoading(false);
         setLikedSubs(response.formSubmissions);
         console.log('successfully fetched submissions', response.formSubmissions);
       }
     }
 
-    if (!isFetched) {
+    if (isLoading) {
       retrieveSubmissions();
     }
-  }, [isFetched]);
+  }, [isLoading]);
 
   const saveSubmission = async (sub) => {
     const response = await saveFormSubmission(sub).catch(() => {
@@ -47,15 +49,24 @@ export default function useLikedSubmissions () {
     if (response && response.status === 202) {
       console.log(`successfully saved submission ${sub.id}`);
       // refetch the submissions by updating isfetched state
-      setisFetched(false);
+      setIsSaving(false);
+      setIsLoading(true);
     }
   }
 
+  /**
+   * the exposed save handler:
+    * updates the liked prop of @param newSubmission
+    * calls the async handler to save the liked submission
+   */
   const handleLikeSub = (newSubmission) => {
-    console.log('subimssion liked!', newSubmission);
+    if (!(newSubmission && newSubmission.data)) {
+      return;
+    }
     newSubmission.liked = true;
+    setIsSaving(true);
     saveSubmission(newSubmission);
   }
 
-  return [isFetched, likedSubs, handleLikeSub];
+  return [isLoading, isSaving, likedSubs, handleLikeSub];
 }

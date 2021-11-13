@@ -1,30 +1,45 @@
 import { IconButton, Snackbar, Box } from '@mui/material';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import CloseIcon from '@mui/icons-material/Close';
+import useNewSubmission from "../hooks/useNewSubmission";
 
 Notification.propTypes = {
-  handleClose: PropTypes.func.isRequired,
   handleAction: PropTypes.func.isRequired,
-  open: PropTypes.bool.isRequired,
-  submission: PropTypes.object.isRequired,
 }
 
 /**
  * a notification component implemented with the Material snackbar
- * @param handleClose: handler to dismiss the notification
  * @param handleAction: handler for when the like button is clicked
- * @param open: should the notification be displayed?
- * @param submission: the new submission to display in the notification
  */
 export default function Notification(props) {
-  const { open, handleClose, handleAction, submission } = props;
+  const { handleAction } = props;
 
-  const { data } = submission;
+  const [show, setShow ] = useState(false);
+  const newSubmission = useNewSubmission();
+
+  // toggle notification visibility when there is a new submission available
+  useEffect(() => {
+    setShow(!!newSubmission);
+  }, [newSubmission])
+
+  // when the like button is clicked, call the parent handler and close the notification
+  const handleClickLike = () => {
+    handleAction(newSubmission);
+    setShow(o => !o);
+  }
+
+  // only render when there is a 'new' submission
+  if (!newSubmission) {
+    return null
+  }
+
+  const { data } = newSubmission;
+
 	return (
     <Snackbar
-      open={open}
-      onClose={null}
+      open={show}
       anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
       sx={{backgroundColor: '#1976d2', color: '#fff'}}
     >
@@ -33,10 +48,10 @@ export default function Notification(props) {
           <div>{data.firstName} {data.lastName}</div>
           <div>{data.email}</div>
         </Box>
-        <IconButton onClick={handleAction}>
+        <IconButton onClick={handleClickLike}>
           <ThumbUpIcon htmlColor='#fff' />
         </IconButton>
-        <IconButton onClick={handleClose}>
+        <IconButton onClick={() => setShow(false)}>
           <CloseIcon htmlColor='#fff' />
         </IconButton>
       </Box>

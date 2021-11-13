@@ -1,31 +1,22 @@
-import { useState, useEffect } from "react";
-import { Box, Typography, List, ListItem, ListItemText } from "@mui/material";
+import { Box, List, ListItem, ListItemText } from "@mui/material";
+import ContentTitle from './ContentTitle';
 import Notification from "./Notification";
 import useLikedSubmissions from "../hooks/useLikedSubmissions";
-import useNewSubmission from "../hooks/useNewSubmission";
 
 export default function Content() {
-  const newSubmission = useNewSubmission();
-  const [isFetched, likedSubs, handleLikeSub] = useLikedSubmissions();
-  const [showNotification, setShowNotification] = useState(false);
-
-  useEffect(() => {
-    if (newSubmission) {
-      setShowNotification(o => !o);
-    }
-  }, [newSubmission]);
+  const [isLoading, isSaving, likedSubs, handleLikeSub] = useLikedSubmissions();
 
   // calls the api save handler then closes the notification
-  const handleClickLike = () => {
-    handleLikeSub(newSubmission);
-    setShowNotification(false);
+  const handleClickLike = (submission) => {
+    handleLikeSub(submission);
   }
 
   return (
     <Box sx={{ marginTop: 3 }}>
-      <Typography variant="h4">Liked Form Submissions {!isFetched ? '(Loading...)' : ''}</Typography>
+      <ContentTitle isSaving={isSaving} isLoading={isLoading} />
+      {/* render the liked submissions */}
       <List sx={{ marginTop: 1 }}>
-        {isFetched
+        {!isLoading
           ? likedSubs.map((s) => {
             const { data, id } = s;
             return (
@@ -36,14 +27,8 @@ export default function Content() {
           })
           : null}
       </List>
-      {newSubmission ? (
-        <Notification
-          open={showNotification}
-          handleClose={() => setShowNotification(false)}
-          handleAction={handleClickLike}
-          submission={newSubmission}
-        />
-      ) : null}
+      {/* render the notification */}
+      <Notification handleAction={handleClickLike} isSaving={isSaving} />
     </Box>
   );
 }
